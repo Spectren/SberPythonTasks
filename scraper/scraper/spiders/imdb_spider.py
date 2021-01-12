@@ -12,33 +12,6 @@ class ImdbSpider(scrapy.Spider):
 
     def fetch_search_form(self, response: Response):
         user_config = self.settings.get('user_config')
-        # data = {
-        #     "realm": "title",
-        #     "title": user_config['title'],
-        #     "release_date-min": user_config['release_date_to'],
-        #     "release_date-max": user_config['release_date_from'],
-        #     "user_rating-min": user_config['user_rating_min'],
-        #     "user_rating-max": user_config['user_rating_max'],
-        #     "num_votes-min": "",
-        #     "num_votes-max": "",
-        #     "keywords": "",
-        #     "locations": "",
-        #     "moviemeter-min": "",
-        #     "moviemeter-max": "",
-        #     "genres": user_config['genres'],
-        #     "countries": user_config['countries'],
-        #     "plot": "",
-        #     "hidden-selected-text": "",
-        #     "role": "",
-        #     "runtime-min": "",
-        #     "runtime-max": "",
-        #     "my_ratings": "",
-        #     "now_playing": "",
-        #     "adult": "",
-        #     "view": "simple",
-        #     "count": "250",
-        #     "sort": "moviemeter,asc"
-        # }
 
         yield scrapy.FormRequest.from_response(response, formdata=user_config, formcss='form[method=POST]',
                                                callback=self.get_result_list)
@@ -52,12 +25,28 @@ class ImdbSpider(scrapy.Spider):
     def parse_movie_page(self, response):
         item = ScraperItem()
         item['title'] = response.css('.title_wrapper > h1 ::text').extract_first()
-        item['genres'] = ", ".join(response.css('div.see-more:nth-child(10) > a ::text').extract())
-        item['rating'] = response.css('.ratingValue > strong:nth-child(1) > span ::text').extract_first()
+        item['genres'] = ", ".join(response.css('.see-more.inline.canwrap > a[href*=title_type] ::text').extract())
+        item['rating'] = response.css('.ratingValue > strong > span ::text').extract_first()
         item['stars'] = ", ".join(response.css('td:nth-child(2) > a ::text').extract())
-        item['type'] = '-'
-        item['details'] = ''
-        item['box_office'] = ''
-        item['technical_spec'] = ''
+        item['type'] = '-' #Я не увидел, где это поле находится на странице
+        item['details'] = {
+            'Official Sites: ': ", ".join(response.css('#titleDetails >div> a[href*=offsite] ::text').extract()),
+            'Country: ': ", ".join(response.css('#titleDetails > div > a[href*=country_of_origin] ::text').extract()),
+            'Language: ': ", ".join(response.css('#titleDetails >div > a[href*=primary_language] ::text').extract()),
+            #'Release Date: ': response.css('#titleDetails > div:nth-child(5)').extract(),
+            #'Also Known As: ': response.css('div.txt-block:nth-child(6)').extract(),
+            'Filming Locations: ': response.css('#titleDetails >div > a[href*=locations] ::text').extract_first()
+        },
+        item['box_office'] = {
+            #'Opening Weekend USA: ': response.css('div.txt-block:nth-child(11)').extract(),
+            #'Gross USA: ': response.css('#titleDetails > div:nth-child(12)').extract(),
+            #'Cumulative Worldwide Gross: ': response.css('#titleDetails > div:nth-child(13)').extract(),
+        },
+        item['technical_spec'] = {
+            'Runtime': response.css('.txt-block > time ::text').extract_first(),
+            'Sound Mix: ': ", ".join(response.css('.txt-block > a[href*=sound_mixes] ::text').extract()),
+            'Color: ': response.css('.txt-block > a[href*=colors] ::text').extract_first(),
+            #'Aspect Ratio: ': response.css('div.txt-block:nth-child(24)').extract(),
+        },
 
         yield item

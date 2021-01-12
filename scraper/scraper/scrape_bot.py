@@ -1,6 +1,5 @@
 import http.server
 import socketserver
-from threading import Thread
 from urllib.parse import parse_qs
 
 from scrapy.crawler import CrawlerProcess
