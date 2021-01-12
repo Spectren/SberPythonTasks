@@ -12,35 +12,35 @@ class ImdbSpider(scrapy.Spider):
 
     def fetch_search_form(self, response: Response):
         user_config = self.settings.get('user_config')
-        data = {
-            "realm": "title",
-            "title": user_config['title'],
-            "release_date-min": user_config['release_date_to'],
-            "release_date-max": user_config['release_date_from'],
-            "user_rating-min": user_config['user_rating_min'],
-            "user_rating-max": user_config['user_rating_max'],
-            "num_votes-min": "",
-            "num_votes-max": "",
-            "keywords": "",
-            "locations": "",
-            "moviemeter-min": "",
-            "moviemeter-max": "",
-            "genres": user_config['genres'],
-            "countries": user_config['countries'],
-            "plot": "",
-            "hidden-selected-text": "",
-            "role": "",
-            "runtime-min": "",
-            "runtime-max": "",
-            "my_ratings": "",
-            "now_playing": "",
-            "adult": "",
-            "view": "simple",
-            "count": "250",
-            "sort": "moviemeter,asc"
-        }
+        # data = {
+        #     "realm": "title",
+        #     "title": user_config['title'],
+        #     "release_date-min": user_config['release_date_to'],
+        #     "release_date-max": user_config['release_date_from'],
+        #     "user_rating-min": user_config['user_rating_min'],
+        #     "user_rating-max": user_config['user_rating_max'],
+        #     "num_votes-min": "",
+        #     "num_votes-max": "",
+        #     "keywords": "",
+        #     "locations": "",
+        #     "moviemeter-min": "",
+        #     "moviemeter-max": "",
+        #     "genres": user_config['genres'],
+        #     "countries": user_config['countries'],
+        #     "plot": "",
+        #     "hidden-selected-text": "",
+        #     "role": "",
+        #     "runtime-min": "",
+        #     "runtime-max": "",
+        #     "my_ratings": "",
+        #     "now_playing": "",
+        #     "adult": "",
+        #     "view": "simple",
+        #     "count": "250",
+        #     "sort": "moviemeter,asc"
+        # }
 
-        yield scrapy.FormRequest.from_response(response, formdata=data, formcss='form[method=POST]',
+        yield scrapy.FormRequest.from_response(response, formdata=user_config, formcss='form[method=POST]',
                                                callback=self.get_result_list)
 
     def get_result_list(self, response: Response):
@@ -51,11 +51,11 @@ class ImdbSpider(scrapy.Spider):
 
     def parse_movie_page(self, response):
         item = ScraperItem()
-        item['title'] = response.css('.title_wrapper > h1:nth-child(1) ::text').extract_first()
-        item['genres'] = ", ".join(response.css('div.see-more:nth-child(10) > a:nth-child(2) ::text').extract())
-        item['rating'] = response.css('.ratingValue > strong:nth-child(1) > span:nth-child(1) ::text').extract_first()
+        item['title'] = response.css('.title_wrapper > h1 ::text').extract_first()
+        item['genres'] = ", ".join(response.css('div.see-more:nth-child(10) > a ::text').extract())
+        item['rating'] = response.css('.ratingValue > strong:nth-child(1) > span ::text').extract_first()
         item['stars'] = ", ".join(response.css('td:nth-child(2) > a ::text').extract())
-        item['type'] = ''
+        item['type'] = '-'
         item['details'] = ''
         item['box_office'] = ''
         item['technical_spec'] = ''
