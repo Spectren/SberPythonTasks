@@ -23,6 +23,8 @@ class ImdbSpider(scrapy.Spider):
         )
 
     def parse_movie_page(self, response):
+        self.logger.info('Parse function called on %s', response.url)
+
         item = ScraperItem()
         item['title'] = response.css('.title_wrapper > h1 ::text').extract_first()
         item['genres'] = ", ".join(response.css('.see-more.inline.canwrap > a[href*=title_type] ::text').extract())
@@ -46,7 +48,7 @@ class ImdbSpider(scrapy.Spider):
             'Runtime': response.css('.txt-block > time ::text').extract_first(),
             'Sound Mix: ': ", ".join(response.css('.txt-block > a[href*=sound_mixes] ::text').extract()),
             'Color: ': response.css('.txt-block > a[href*=colors] ::text').extract_first(),
-            #'Aspect Ratio: ': response.css('div.txt-block:nth-child(24)').extract(),
+            #'Aspect Ratio: ': response.css('h3 + .txt-block +  .txt-block +  .txt-block +  .txt-block > h4 ').extract(),
         },
 
         yield item
